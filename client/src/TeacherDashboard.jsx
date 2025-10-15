@@ -228,7 +228,7 @@ export default function TeacherDashboard() {
     photo: "",
     age: "",
     mentalAge: "",
-    guardian: "",
+    parent: "",
     emergencyContact: "",
     studentId: "",
     grade: "",
@@ -250,7 +250,7 @@ export default function TeacherDashboard() {
       photo: "",
       age: "",
       mentalAge: "",
-      guardian: "",
+      parent: "",
       emergencyContact: "",
       studentId: "",
       grade: "",
@@ -372,7 +372,7 @@ export default function TeacherDashboard() {
                   <Input name="mentalAge" value={newStudent.mentalAge} onChange={handleChange} required />
                 </FormGroup>
                 <FormGroup>
-                  <Label>Guardian Name</Label>
+                  <Label>Parent Name</Label>
                   <Input name="guardian" value={newStudent.guardian} onChange={handleChange} required />
                 </FormGroup>
                 <FormGroup>
