@@ -186,52 +186,76 @@ const SubmitButton = styled.button`
     background: #facc15;
     box-shadow: 0px 0px 20px rgba(251, 191, 36, 0.5);
   }
+  &:disabled {
+    background: #cbd5e1;
+    cursor: not-allowed;
+  }
+`;
+
+const ErrorMessage = styled.div`
+  background: #fee2e2;
+  border: 1px solid #fecaca;
+  color: #dc2626;
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+  text-align: center;
+  animation: ${fadeIn} 0.3s ease-out;
 `;
 
 // ---------- Component ----------
 const Login = () => {
   const [role, setRole] = useState("student");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setError("");
+    setLoading(true);
 
-    if (role === "student") navigate("/dashboard");
-    else if (role === "teacher") navigate("/teacher-dashboard");
-    else if (role === "parent") navigate("/parent-dashboard");
-    else if (role === "admin") navigate("/admin-dashboard");
-    else alert(`Login for ${role} not implemented yet!`);
-  };
+    try {
+      const response = await fetch("http://localhost:5000/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password }),
+      });
 
-  const getPlaceholder1 = () => {
-    switch (role) {
-      case "student":
-        return "Student Name";
-      case "teacher":
-        return "Teacher ID";
-      case "parent":
-        return "Parent Name";
-      case "admin":
-        return "Admin ID";
-      default:
-        return "Username";
+      const data = await response.json();
+
+      if (response.ok) {
+        // Check if user role matches selected role
+        if (data.user.role !== role) {
+          setError("Incorrect credentials. Please select the correct role.");
+          setLoading(false);
+          return;
+        }
+
+        // Store token and user data
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("user", JSON.stringify(data.user));
+
+        // Navigate based on role
+        if (role === "student") navigate("/dashboard");
+        else if (role === "teacher") navigate("/teacher-dashboard");
+        else if (role === "parent") navigate("/parent-dashboard");
+        else if (role === "admin") navigate("/admin-dashboard");
+      } else {
+        setError(data.message || "Incorrect credentials. Please try again.");
+      }
+    } catch (err) {
+      setError("Connection error. Please make sure the server is running.");
+    } finally {
+      setLoading(false);
     }
   };
 
-  const getPlaceholder2 = () => {
-    switch (role) {
-      case "student":
-        return "Student ID";
-      case "teacher":
-        return "Password";
-      case "parent":
-        return "Child ID";
-      case "admin":
-        return "Password";
-      default:
-        return "Password";
-    }
-  };
 
   return (
     <Wrapper>
@@ -282,9 +306,25 @@ const Login = () => {
         </RoleSwitch>
 
         <form onSubmit={handleSubmit}>
-          <Input type="text" placeholder={getPlaceholder1()} required />
-          <Input type="text" placeholder={getPlaceholder2()} required />
-          <SubmitButton type="submit">Sign In</SubmitButton>
+          {error && <ErrorMessage>{error}</ErrorMessage>}
+          
+          <Input 
+            type="email" 
+            placeholder="Email" 
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required 
+          />
+          <Input 
+            type="password" 
+            placeholder="Password" 
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required 
+          />
+          <SubmitButton type="submit" disabled={loading}>
+            {loading ? "Signing In..." : "Sign In"}
+          </SubmitButton>
         </form>
       </Card>
     </Wrapper>
