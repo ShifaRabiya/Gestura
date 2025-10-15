@@ -6,7 +6,7 @@ import { useNavigate, Link } from "react-router-dom";
 const Container = styled.div`
   display: flex;
   min-height: 100vh;
-  font-family: 'Lexend', sans-serif;
+  font-family: 'Quicksand', cursive;
 `;
 
 const Sidebar = styled.aside`
