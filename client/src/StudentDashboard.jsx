@@ -114,63 +114,6 @@ const Logo = styled.div`
     1px 1px 0 rgba(255, 255, 255, 0.6), 2px 4px 6px rgba(0, 0, 0, 0.3);
 `;
 
-const HeaderIcons = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-`;
-
-const NotificationButton = styled.button`
-  position: relative;
-  border-radius: 9999px;
-  padding: 0.25rem;
-  color: #facc15;
-  background: none;
-  cursor: pointer;
-
-  span:first-child {
-    font-size: 1.75rem;
-    animation: ${starShine} 1.5s ease-in-out infinite;
-  }
-
-  span.badge {
-    position: absolute;
-    top: 0.125rem;
-    right: 0.125rem;
-    height: 0.75rem;
-    width: 0.75rem;
-
-    .ping {
-      position: absolute;
-      height: 100%;
-      width: 100%;
-      border-radius: 9999px;
-      background-color: #ff6b6b;
-      opacity: 0.75;
-      animation: ping 1s cubic-bezier(0, 0, 0.2, 1) infinite;
-    }
-
-    .dot {
-      position: relative;
-      height: 0.75rem;
-      width: 0.75rem;
-      border-radius: 9999px;
-      background-color: #ff6b6b;
-      border: 2px solid white;
-    }
-  }
-`;
-
-const ProfilePic = styled.div`
-  width: 3rem;
-  height: 3rem;
-  border-radius: 9999px;
-  border: 2px solid #3498db;
-  background-size: cover;
-  background-position: center;
-  transform: rotate(5deg);
-`;
-
 const MainContainer = styled.main`
   flex-grow: 1;
   max-width: 1200px;
