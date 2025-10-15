@@ -198,18 +198,21 @@ const SubmitButton = styled.button`
 // ---------------- Sample Data ----------------
 const initialStudents = [
   {
+    studentId: "S001",
     name: "Sophia Clark",
     age: "7 years",
     level: "Level 3",
     avatar: "https://lh3.googleusercontent.com/aida-public/AB6AXuA3X15ZK5mIBQ5jptcxUMNZDvaKiDLM0t9V67IbuVXfkeQa7K8gpQcuFEvtsQXODnQiaB9XwOTSQ7UbTfZz8n24HXWDhWYoTEifam3dgZoacAr72YNBE1NpWtr46X5ocvp9ZfGjp2pK9z8TX1LHFF77dzqNV56jrsfJhg6U7teb870WvmlyMju6c6peCTxVkq6fXGK-W_RTlU8ICJM2rP1jPE_4JQZTHIKPG1smccBL93o6H3XIDvG0osMCjTj0-dO063XuwGlWwItd",
   },
   {
+    studentId: "S002",
     name: "Ethan Carter",
     age: "9 years",
     level: "Level 5",
     avatar: "https://lh3.googleusercontent.com/aida-public/AB6AXuDfj2YwaKfpQd2yZPhdZ_HY1ANZZ5YREbLrieaNO_LfpXgRTg6EEJIXtV-p2uVD_dDBmuJvliQvPiWJuILuGyMckkAtGmEZgtrnrujc71rYLw-mNffXD_iT2YIW0nrmVb5WH73WT0Z3PBEJEbde0srXkgovcjTMGa0G9U7f0HgPteIoqLpbebOplVTOr1AoueDGKa_tew-TPLALhPZsEqjePD9SLEsntmLKw0aefZ-OLw7C-dezPcqPlCZOq68ywqlc5T98N0Ir6SXb",
   },
   {
+    studentId: "S003",
     name: "Olivia Bennett",
     age: "6 years",
     level: "Level 2",
@@ -235,6 +238,9 @@ export default function TeacherDashboard() {
     level: "",
   });
   const [reportFile, setReportFile] = useState(null);
+  const [feedbacks, setFeedbacks] = useState([]); // stores all feedbacks
+  const [feedbackText, setFeedbackText] = useState(""); // current feedback input
+  const [selectedStudent, setSelectedStudent] = useState(null); // which student feedback is for
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -309,91 +315,159 @@ export default function TeacherDashboard() {
               <Tab active={activeTab === "add"} onClick={() => setActiveTab("add")}>
                 Add New Student
               </Tab>
+              <Tab active={activeTab === "feedback"} onClick={() => setActiveTab("feedback")}>
+                Write Feedback
+              </Tab>
             </Tabs>
-
-            {activeTab === "view" ? (
-              <>
-                <SearchWrapper>
-                  <SearchInput placeholder="Search students" />
-                </SearchWrapper>
-                <TableWrapper>
-                  <Table>
-                    <thead>
-                      <tr>
-                        <Th>Student</Th>
-                        <Th>Mental Age</Th>
-                        <Th>Current Game Level</Th>
-                        <Th>Actions</Th>
+            {activeTab === "view" && (
+            <>
+              <SearchWrapper>
+                <SearchInput placeholder="Search students" />
+              </SearchWrapper>
+              <TableWrapper>
+                <Table>
+                  <thead>
+                    <tr>
+                      <Th>Student</Th>
+                      <Th>Mental Age</Th>
+                      <Th>Current Game Level</Th>
+                      <Th>Actions</Th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {students.map((student, index) => (
+                      <tr key={index}>
+                        <Td>
+                          <div style={{ display: "flex", alignItems: "center" }}>
+                            <Avatar src={student.photo || student.avatar || ""} />
+                            <span>{student.name}</span>
+                          </div>
+                        </Td>
+                        <Td>{student.mentalAge || student.age}</Td>
+                        <Td>{student.level}</Td>
+                        <Td>
+                          <ActionLink as={Link} to="/view-details">View Details</ActionLink>
+                        </Td>
                       </tr>
-                    </thead>
-                    <tbody>
-                      {students.map((student, index) => (
-                        <tr key={index}>
-                          <Td>
-                            <div style={{ display: "flex", alignItems: "center" }}>
-                              <Avatar src={student.photo || student.avatar || ""} />
-                              <span>{student.name}</span>
-                            </div>
-                          </Td>
-                          <Td>{student.mentalAge || student.age}</Td>
-                          <Td>{student.level}</Td>
-                          <Td>
-                            <ActionLink as={Link} to="/view-details">View Details</ActionLink>
-                          </Td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </Table>
-                </TableWrapper>
-              </>
-            ) : (
-              <Form onSubmit={handleSubmit}>
-                {/* Student form fields as before */}
-                <FormGroup>
-                  <Label>Student Name</Label>
-                  <Input name="name" value={newStudent.name} onChange={handleChange} required />
-                </FormGroup>
-                <FormGroup>
-                  <Label>Student Photo</Label>
-                  <Input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) =>
-                      setNewStudent((prev) => ({ ...prev, photo: e.target.files[0] }))
-                    }
-                  />
-                </FormGroup>
-                <FormGroup>
-                  <Label>Age</Label>
-                  <Input name="age" value={newStudent.age} onChange={handleChange} required />
-                </FormGroup>
-                <FormGroup>
-                  <Label>Mental Age</Label>
-                  <Input name="mentalAge" value={newStudent.mentalAge} onChange={handleChange} required />
-                </FormGroup>
-                <FormGroup>
-                  <Label>Parent Name</Label>
-                  <Input name="guardian" value={newStudent.guardian} onChange={handleChange} required />
-                </FormGroup>
-                <FormGroup>
-                  <Label>Emergency Contact Number</Label>
-                  <Input name="emergencyContact" value={newStudent.emergencyContact} onChange={handleChange} required />
-                </FormGroup>
-                <FormGroup>
-                  <Label>Student ID</Label>
-                  <Input name="studentId" value={newStudent.studentId} onChange={handleChange} required />
-                </FormGroup>
-                <FormGroup>
-                  <Label>Grade</Label>
-                  <Input name="grade" value={newStudent.grade} onChange={handleChange} required />
-                </FormGroup>
-                <FormGroup>
-                  <Label>Game Level</Label>
-                  <Input name="level" value={newStudent.level} onChange={handleChange} required />
-                </FormGroup>
-                <SubmitButton type="submit">Add Student</SubmitButton>
-              </Form>
-            )}
+                    ))}
+                  </tbody>
+                </Table>
+              </TableWrapper>
+            </>
+          )}
+
+          {activeTab === "add" && (
+            <Form onSubmit={handleSubmit}>
+              <FormGroup>
+                <Label>Student Name</Label>
+                <Input name="name" value={newStudent.name} onChange={handleChange} required />
+              </FormGroup>
+              <FormGroup>
+                <Label>Student Photo</Label>
+                <Input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) =>
+                    setNewStudent((prev) => ({ ...prev, photo: e.target.files[0] }))
+                  }
+                />
+              </FormGroup>
+              <FormGroup>
+                <Label>Age</Label>
+                <Input name="age" value={newStudent.age} onChange={handleChange} required />
+              </FormGroup>
+              <FormGroup>
+                <Label>Mental Age</Label>
+                <Input name="mentalAge" value={newStudent.mentalAge} onChange={handleChange} required />
+              </FormGroup>
+              <FormGroup>
+                <Label>Parent Name</Label>
+                <Input name="parent" value={newStudent.parent} onChange={handleChange} required />
+              </FormGroup>
+              <FormGroup>
+                <Label>Emergency Contact Number</Label>
+                <Input name="emergencyContact" value={newStudent.emergencyContact} onChange={handleChange} required />
+              </FormGroup>
+              <FormGroup>
+                <Label>Student ID</Label>
+                <Input name="studentId" value={newStudent.studentId} onChange={handleChange} required />
+              </FormGroup>
+              <FormGroup>
+                <Label>Grade</Label>
+                <Input name="grade" value={newStudent.grade} onChange={handleChange} required />
+              </FormGroup>
+              <FormGroup>
+                <Label>Game Level</Label>
+                <Input name="level" value={newStudent.level} onChange={handleChange} required />
+              </FormGroup>
+              <SubmitButton type="submit">Add Student</SubmitButton>
+            </Form>
+          )}
+
+          {activeTab === "feedback" && (
+            <Form
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (!selectedStudent || !feedbackText.trim()) return;
+                setFeedbacks((prev) => [
+                  ...prev,
+                  {
+                    studentName: selectedStudent.name,
+                    studentId: selectedStudent.studentId,
+                    comment: feedbackText,
+                  },
+                ]);
+                setFeedbackText("");
+                setSelectedStudent(null);
+                alert("Feedback submitted successfully!");
+              }}
+            >
+              <FormGroup>
+                <Label>Select Student</Label>
+                <select
+                  value={selectedStudent ? selectedStudent.studentId : ""}
+                  onChange={(e) =>
+                    setSelectedStudent(
+                      students.find((s) => s.studentId === e.target.value)
+                    )
+                  }
+                  required
+                  style={{
+                    width: "100%",
+                    padding: "0.5rem",
+                    border: "1px solid #d1d5db",
+                    borderRadius: "0.5rem",
+                  }}
+                >
+                  <option value="">-- Select Student --</option>
+                  {students.map((student) => (
+                    <option key={student.studentId} value={student.studentId}>
+                      {student.name} ({student.studentId})
+                    </option>
+                  ))}
+                </select>
+              </FormGroup>
+
+              <FormGroup>
+                <Label>Feedback</Label>
+                <textarea
+                  value={feedbackText}
+                  onChange={(e) => setFeedbackText(e.target.value)}
+                  placeholder="Write feedback here..."
+                  required
+                  style={{
+                    width: "100%",
+                    padding: "0.5rem",
+                    border: "1px solid #d1d5db",
+                    borderRadius: "0.5rem",
+                    minHeight: "100px",
+                  }}
+                />
+              </FormGroup>
+
+              <SubmitButton type="submit">Submit Feedback</SubmitButton>
+            </Form>
+          )}
           </>
         ) : (
           <>
