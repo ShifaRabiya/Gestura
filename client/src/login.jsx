@@ -122,11 +122,20 @@ const Highlight = styled.div`
   position: absolute;
   top: 0;
   bottom: 0;
-  width: 33.33%;
+  width: 25%;
   background: #fbbf24;
   border-radius: 9999px;
   transition: transform 0.4s ease;
-  transform: translateX(${(p) => (p.role === "student" ? "0%" : p.role === "teacher" ? "100%" : "200%")});
+  transform: translateX(
+    ${(p) =>
+      p.role === "student"
+        ? "0%"
+        : p.role === "teacher"
+        ? "100%"
+        : p.role === "parent"
+        ? "200%"
+        : "300%"}
+  );
 `;
 
 const RoleButton = styled.button`
@@ -182,20 +191,47 @@ const SubmitButton = styled.button`
 // ---------- Component ----------
 const Login = () => {
   const [role, setRole] = useState("student");
-  const navigate = useNavigate(); // <-- initialize navigate
+  const navigate = useNavigate();
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (role === "student") {
-        navigate("/dashboard");
-    } else if (role === "teacher") {
-        navigate("/teacher-dashboard");
-    } else if (role === "admin") {
-        navigate("/admin-dashboard"); // <- navigate to admin
-    } else {
-        alert(`Login for ${role} not implemented yet!`);
+
+    if (role === "student") navigate("/dashboard");
+    else if (role === "teacher") navigate("/teacher-dashboard");
+    else if (role === "parent") navigate("/parent-dashboard");
+    else if (role === "admin") navigate("/admin-dashboard");
+    else alert(`Login for ${role} not implemented yet!`);
+  };
+
+  const getPlaceholder1 = () => {
+    switch (role) {
+      case "student":
+        return "Student Name";
+      case "teacher":
+        return "Teacher ID";
+      case "parent":
+        return "Parent Name";
+      case "admin":
+        return "Admin ID";
+      default:
+        return "Username";
     }
-    };
+  };
+
+  const getPlaceholder2 = () => {
+    switch (role) {
+      case "student":
+        return "Student ID";
+      case "teacher":
+        return "Password";
+      case "parent":
+        return "Child ID";
+      case "admin":
+        return "Password";
+      default:
+        return "Password";
+    }
+  };
 
   return (
     <Wrapper>
@@ -237,22 +273,17 @@ const Login = () => {
           <RoleButton active={role === "teacher"} onClick={() => setRole("teacher")}>
             Teacher
           </RoleButton>
+          <RoleButton active={role === "parent"} onClick={() => setRole("parent")}>
+            Parent
+          </RoleButton>
           <RoleButton active={role === "admin"} onClick={() => setRole("admin")}>
             Admin
           </RoleButton>
         </RoleSwitch>
 
-        <form onSubmit={handleSubmit}> {/* <-- attach submit handler */}
-          <Input
-            type="text"
-            placeholder={`${role === "student" ? "Name" : role === "teacher" ? "Teacher ID" : "Admin ID"}`}
-            required
-          />
-          <Input
-            type="text"
-            placeholder={`${role === "student" ? "Student ID" : "Password"}`}
-            required
-          />
+        <form onSubmit={handleSubmit}>
+          <Input type="text" placeholder={getPlaceholder1()} required />
+          <Input type="text" placeholder={getPlaceholder2()} required />
           <SubmitButton type="submit">Sign In</SubmitButton>
         </form>
       </Card>
