@@ -205,7 +205,6 @@ const OverallProgress = styled.div`
   margin-top: 1.5rem;
   border-top: 1px solid #e5e7eb;
   padding-top: 1rem;
-  self-slign: center;
 `;
 
 // ---------------- Main Component ----------------
@@ -245,7 +244,7 @@ export default function ViewDetails() {
         <InfoCard>
             <h3 style={{ fontWeight: 700, marginBottom: "1rem", color: "#1f2937" }}>Student Information</h3>
             <InfoItem>
-            <InfoLabel>Guardian Name</InfoLabel>
+            <InfoLabel>Parent Name</InfoLabel>
             <InfoValue>Emily Clark</InfoValue>
             </InfoItem>
             <InfoItem>
