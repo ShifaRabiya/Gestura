@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import styled from "styled-components";
-import { FiHome, FiUsers, FiBook } from "react-icons/fi";
+import { Link } from "react-router-dom";
 
 // ---------------- Styled Components ----------------
 const Container = styled.div`
@@ -8,7 +8,6 @@ const Container = styled.div`
   min-height: 100vh;
   font-family: 'Plus Jakarta Sans', sans-serif;
   background-color: #f0f8ff;
-
   @media (prefers-color-scheme: dark) {
     background-color: #101c22;
   }
@@ -21,7 +20,6 @@ const Sidebar = styled.aside`
   border-right: 1px solid #f0f8ff;
   padding: 1.5rem 0;
   backdrop-filter: blur(12px);
-
   @media (prefers-color-scheme: dark) {
     background-color: rgba(16, 28, 34, 0.8);
     border-color: #101c22;
@@ -32,7 +30,6 @@ const Logo = styled.h1`
   padding: 1.5rem;
   font-weight: 800;
   font-size: 2.25rem;
-  line-height: 2.5rem;
   display: flex;
   gap: 0.1rem;
 `;
@@ -50,17 +47,13 @@ const NavItem = styled.a`
   border-radius: 0.5rem;
   font-weight: ${(props) => (props.active ? "bold" : "normal")};
   color: ${(props) => (props.active ? "#111827" : "#6b7280")};
-  background-color: ${(props) => (props.active ? "rgba(13,166,242,0.1)" : "transparent")};
+  background-color: ${(props) =>
+    props.active ? "rgba(13,166,242,0.1)" : "transparent"};
   text-decoration: none;
   margin-bottom: 0.25rem;
   transition: all 0.2s;
-
   &:hover {
     background-color: rgba(13,166,242,0.1);
-  }
-
-  svg {
-    color: #0da6f2;
   }
 `;
 
@@ -69,99 +62,120 @@ const Main = styled.main`
   padding: 2rem;
 `;
 
-const Title = styled.h1`
-  font-size: 2.25rem;
-  font-weight: bold;
-  color: #111827;
-
-  @media (prefers-color-scheme: dark) {
-    color: #f9fafb;
-  }
-`;
-
-const Subtitle = styled.p`
-  margin-top: 0.5rem;
-  color: #6b7280;
-  
-  @media (prefers-color-scheme: dark) {
-    color: #9ca3af;
-  }
-`;
-
-const FormContainer = styled.div`
-  margin-top: 2rem;
+const SectionContainer = styled.div`
   display: grid;
   grid-template-columns: 1fr;
   gap: 2rem;
-
-  @media(min-width: 1024px){
+  margin-top: 2rem;
+  @media(min-width: 1024px) {
     grid-template-columns: repeat(2, 1fr);
   }
 `;
 
 const Card = styled.div`
-  background-color: #ffffff;
+  background-color: white;
+  dark-mode-bg: #101c22;
   padding: 1.5rem;
   border-radius: 1rem;
-  box-shadow: 0 10px 15px rgba(0,0,0,0.1);
-
+  box-shadow: 0px 10px 30px rgba(0,0,0,0.07);
   @media (prefers-color-scheme: dark) {
     background-color: rgba(16,28,34,0.5);
   }
 `;
 
-const Label = styled.label`
-  display: block;
-  margin-bottom: 0.5rem;
-  font-weight: 500;
-  color: #6b7280;
-
+const Title = styled.h2`
+  font-size: 2rem;
+  font-weight: bold;
+  margin-bottom: 1rem;
+  color: #111827;
   @media (prefers-color-scheme: dark) {
-    color: #9ca3af;
+    color: #f9fafb;
   }
 `;
 
 const Input = styled.input`
-  width: 90%;
+  width: 100%;
   padding: 1rem;
+  margin-bottom: 1rem;
   border-radius: 0.75rem;
   border: 1px solid #d1d5db;
-  margin-bottom: 1rem;
-  font-size: 1rem;
-  color: #111827;
-  background-color: #e5e7eb;
-
+  background-color: #ffffff;
   &:focus {
     outline: none;
     box-shadow: 0 0 0 2px rgba(13,166,242,0.3);
-    border-color: transparent;
   }
-
   @media (prefers-color-scheme: dark) {
-    color: #f9fafb;
     background-color: #1f2937;
     border-color: #374151;
+    color: #f9fafb;
   }
 `;
 
 const Button = styled.button`
   width: 100%;
   padding: 0.75rem;
-  background-color: #0da6f2;
-  color: #fff;
-  font-weight: bold;
   border-radius: 0.75rem;
-  cursor: pointer;
-  transition: all 0.2s;
-
+  font-weight: bold;
+  background-color: #0da6f2;
+  color: white;
   &:hover {
-    background-color: rgba(13,166,242,0.9);
+    background-color: #0b8ac9;
   }
 `;
 
+const TableContainer = styled.div`
+  overflow-x: auto;
+  margin-top: 1rem;
+`;
+
+const Table = styled.table`
+  width: 100%;
+  border-collapse: collapse;
+`;
+
+const Th = styled.th`
+  text-align: left;
+  padding: 0.75rem;
+  font-weight: 600;
+  border-bottom: 1px solid #d1d5db;
+`;
+
+const Td = styled.td`
+  padding: 0.75rem;
+  border-bottom: 1px solid #e5e7eb;
+`;
+
+const StatusBadge = styled.span`
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  border-radius: 9999px;
+  background-color: ${(props) => props.color || "#d1fae5"};
+  color: ${(props) => props.textColor || "#065f46"};
+`;
+
 // ---------------- React Component ----------------
-export default function InstitutionManagement() {
+export default function AdminDashboard() {
   const [activeView, setActiveView] = useState("dashboard");
+  const [search, setSearch] = useState("");
+
+  const institutions = [
+    { name: "Sunshine Academy", teachers: 15, students: 120, status: "Active" },
+    { name: "Bright Minds School", teachers: 8, students: 75, status: "Active" },
+    { name: "Hopeful Hearts Center", teachers: 12, students: 98, status: "Pending" },
+    { name: "Evergreen Institute", teachers: 20, students: 150, status: "Inactive" },
+  ];
+
+  const getStatusColor = (status) => {
+    switch(status) {
+      case "Active": return { color: "#d1fae5", textColor: "#065f46" };
+      case "Pending": return { color: "#fef3c7", textColor: "#92400e" };
+      case "Inactive": return { color: "#fee2e2", textColor: "#991b1b" };
+      default: return { color: "#d1fae5", textColor: "#065f46" };
+    }
+  };
 
   return (
     <Container>
@@ -176,66 +190,91 @@ export default function InstitutionManagement() {
           <span style={{ color: "#FFA500" }}>a</span>
         </Logo>
         <Nav>
-          <NavItem 
-            active={activeView === "dashboard"} 
-            href="#" 
-            onClick={() => setActiveView("dashboard")}
-          >
-            <FiHome /> Dashboard
-          </NavItem>
-          <NavItem 
-            active={activeView === "institutions"} 
-            href="#" 
-            onClick={() => setActiveView("institutions")}
-          >
-            <FiUsers /> Institutions
-          </NavItem>
-          <NavItem 
-            active={activeView === "reports"} 
-            href="#" 
-            onClick={() => setActiveView("reports")}
-          >
-            <FiBook /> Reports
-          </NavItem>
+          <NavItem active={activeView === "dashboard"} onClick={() => setActiveView("dashboard")}>Dashboard</NavItem>
+          <NavItem active={activeView === "institutions"} onClick={() => setActiveView("institutions")}>Institutions</NavItem>
+          <NavItem active={activeView === "reports"} onClick={() => setActiveView("reports")}>Reports</NavItem>
         </Nav>
       </Sidebar>
 
       <Main>
         {activeView === "dashboard" && (
-          <>
-            <Title>Admin Dashboard</Title>
-            <FormContainer>
-              <Card>
-                <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1rem' }}>Add Institution</h2>
-                <form>
-                  <Label htmlFor="institutionName">Institution Name</Label>
-                  <Input id="institutionName" type="text" placeholder="Enter institution name" />
-                  <Button type="submit">Add Institution</Button>
-                </form>
-              </Card>
-
-              <Card>
-                <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1rem' }}>Add Teacher</h2>
-                <form>
-                  <Label htmlFor="teacherName">Teacher Name</Label>
-                  <Input id="teacherName" type="text" placeholder="Enter teacher name" />
-                  <Label htmlFor="email">Email</Label>
-                  <Input id="email" type="email" placeholder="Enter email" />
-                  <Label htmlFor="password">Password</Label>
-                  <Input id="password" type="password" placeholder="Enter password" />
-                  <Button type="submit">Add Teacher</Button>
-                </form>
-              </Card>
-            </FormContainer>
-          </>
+          <SectionContainer>
+            <Card>
+              <Title>Add Institution</Title>
+              <form>
+                <Input placeholder="Institution Name" type="text" />
+                <Button type="submit">Add Institution</Button>
+              </form>
+            </Card>
+            <Card>
+              <Title>Add Teacher</Title>
+              <form>
+                <Input placeholder="Teacher Name" type="text" />
+                <Input placeholder="Email" type="email" />
+                <Input placeholder="Password" type="password" />
+                <Button type="submit">Add Teacher</Button>
+              </form>
+            </Card>
+          </SectionContainer>
         )}
 
         {activeView === "institutions" && (
-          <Title>Institutions Management Placeholder</Title>
+          <>
+            <Title>Institution Management</Title>
+            <Input 
+              placeholder="Search institutions..." 
+              value={search} 
+              onChange={(e) => setSearch(e.target.value)} 
+            />
+            <TableContainer>
+              <Table>
+                <thead>
+                  <tr>
+                    <Th>Name</Th>
+                    <Th>Teachers</Th>
+                    <Th>Students</Th>
+                    <Th>Status</Th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {institutions
+                    .filter(i => i.name.toLowerCase().includes(search.toLowerCase()))
+                    .map((inst, idx) => (
+                      <tr key={idx}>
+                        <Td>{inst.name}</Td>
+                        <Td>{inst.teachers}</Td>
+                        <Td>{inst.students}</Td>
+                        <Td>
+                          <StatusBadge {...getStatusColor(inst.status)}>{inst.status}</StatusBadge>
+                        </Td>
+                        <Td>
+                          <Link
+                              to="/institution-profile"
+                              style={{
+                                padding: "0.25rem 0.75rem",
+                                fontSize: "0.75rem",
+                                backgroundColor: "#0da6f2",
+                                color: "white",
+                                borderRadius: "0.5rem",
+                                textDecoration: "none",
+                              }}
+                            >
+                            View Details
+                          </Link>
+                        </Td>
+                      </tr>
+                    ))}
+                </tbody>
+              </Table>
+            </TableContainer>
+          </>
         )}
 
         {activeView === "reports" && (
-          <Title>Reports Placeholder</Title>
+          <>
+            <Title>Reports</Title>
+            <p>View platform reports here.</p>
+          </>
         )}
       </Main>
     </Container>
