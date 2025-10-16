@@ -7,7 +7,7 @@ import TeacherDashboard from "./TeacherDashboard";
 import ViewDetails from "./ViewDetails";
 import AdminDashboard from "./AdminDashboard"; // import admin dashboard
 import ParentDashboard from "./ParentDashboard";
-import InstitutionProfile from "./InstitutionDetails";
+import InstitutionProfile from "./InstitutionProfile";
 
 function App() {
   const [showSplash, setShowSplash] = useState(true);
@@ -31,7 +31,7 @@ function App() {
         <Route path="/teacher-dashboard" element={<TeacherDashboard />} />
         <Route path="/admin-dashboard" element={<AdminDashboard />} /> {/* new */}
         <Route path="/view-details" element={<ViewDetails />} />
-        <Route path="/institution-profile" element={<InstitutionProfile />} />
+        <Route path="/institution-profile/:institutionName" element={<InstitutionProfile />} />
         <Route path="/parent-dashboard" element={<ParentDashboard />} />
       </Routes>
     </Router>
