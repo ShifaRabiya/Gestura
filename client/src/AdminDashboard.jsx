@@ -225,6 +225,26 @@ export default function AdminDashboard() {
   // Institutions list
   const [institutions, setInstitutions] = useState([]);
   const [institutionsLoading, setInstitutionsLoading] = useState(false);
+
+  // Derive student counts per institution from localStorage (students added by teachers)
+  const getLocalStudentCount = (institutionName) => {
+    try {
+      const local = JSON.parse(localStorage.getItem('teacherStudents') || '[]');
+      console.log('All students in localStorage:', local);
+      console.log('Looking for institution:', institutionName);
+      const filtered = local.filter(s => {
+        const studentInst = (s.institution || '').toLowerCase();
+        const searchInst = (institutionName || '').toLowerCase();
+        console.log(`Comparing: "${studentInst}" === "${searchInst}"`, studentInst === searchInst);
+        return studentInst === searchInst;
+      });
+      console.log('Filtered students for', institutionName, ':', filtered);
+      return filtered.length;
+    } catch (e) {
+      console.error('Error getting student count:', e);
+      return 0;
+    }
+  };
   
   // Fetch institutions from API
   const fetchInstitutions = async () => {
@@ -453,7 +473,7 @@ export default function AdminDashboard() {
                         <tr key={idx}>
                           <Td>{inst.name}</Td>
                           <Td>{inst.teachers || 0}</Td>
-                          <Td>{inst.students || 0}</Td>
+                          <Td>{getLocalStudentCount(inst.name)}</Td>
                           <Td>
                             <StatusBadge {...getStatusColor(inst.status)}>{inst.status}</StatusBadge>
                           </Td>

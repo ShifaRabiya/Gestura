@@ -216,9 +216,14 @@ export default function TeacherDashboard() {
     studentId: "",
     grade: "",
     level: "",
+    institution: "",
+    password: "",
   });
   const [reportFile, setReportFile] = useState(null);
   const navigate = useNavigate();
+  // Institutions list for the select
+  const [institutions, setInstitutions] = useState([]);
+  const [institutionsLoading, setInstitutionsLoading] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -229,6 +234,23 @@ export default function TeacherDashboard() {
   useEffect(() => {
     localStorage.setItem('teacherStudents', JSON.stringify(students));
   }, [students]);
+
+  // Fetch institutions to populate the select
+  useEffect(() => {
+    const fetchInstitutions = async () => {
+      setInstitutionsLoading(true);
+      try {
+        const res = await fetch('http://localhost:5000/api/institutions');
+        const data = await res.json();
+        if (res.ok) setInstitutions(data.institutions || []);
+      } catch (e) {
+        console.error('Failed to fetch institutions for teacher form:', e);
+      } finally {
+        setInstitutionsLoading(false);
+      }
+    };
+    fetchInstitutions();
+  }, []);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -241,6 +263,9 @@ export default function TeacherDashboard() {
       avatar: newStudent.photo || "https://via.placeholder.com/150"
     };
     
+    console.log('Adding student with institution:', formattedStudent.institution);
+    console.log('Full student data:', formattedStudent);
+    
     setStudents((prev) => [...prev, formattedStudent]);
     setNewStudent({
       name: "",
@@ -252,6 +277,8 @@ export default function TeacherDashboard() {
       studentId: "",
       grade: "",
       level: "",
+      institution: "",
+      password: "",
     });
     setActiveTab("view");
   };
@@ -384,6 +411,26 @@ export default function TeacherDashboard() {
               <Form onSubmit={handleSubmit}>
                 {/* Student form fields as before */}
                 <FormGroup>
+                  <Label>Institution</Label>
+                  <select
+                    name="institution"
+                    value={newStudent.institution}
+                    onChange={handleChange}
+                    required
+                    style={{
+                      width: '100%',
+                      padding: '0.5rem 0.75rem',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '0.5rem'
+                    }}
+                  >
+                    <option value="">{institutionsLoading ? 'Loading institutions...' : 'Select Institution'}</option>
+                    {institutions.map((inst, idx) => (
+                      <option key={idx} value={inst.name}>{inst.name}</option>
+                    ))}
+                  </select>
+                </FormGroup>
+                <FormGroup>
                   <Label>Student Name</Label>
                   <Input name="name" value={newStudent.name} onChange={handleChange} required />
                 </FormGroup>
@@ -434,6 +481,17 @@ export default function TeacherDashboard() {
                 <FormGroup>
                   <Label>Student ID</Label>
                   <Input name="studentId" value={newStudent.studentId} onChange={handleChange} required />
+                </FormGroup>
+                <FormGroup>
+                  <Label>Password (for student login)</Label>
+                  <Input 
+                    name="password" 
+                    type="password"
+                    placeholder="Set password for student"
+                    value={newStudent.password} 
+                    onChange={handleChange} 
+                    required 
+                  />
                 </FormGroup>
                 <FormGroup>
                   <Label>Grade</Label>

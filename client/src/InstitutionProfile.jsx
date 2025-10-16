@@ -212,13 +212,16 @@ export default function InstitutionProfile() {
         setTeachers(teachersData.users || []);
       }
       
-      // Fetch students for this institution
-      const studentsResponse = await fetch(
-        `http://localhost:5000/api/users?role=student&institution=${encodeURIComponent(decodedName)}`
-      );
-      const studentsData = await studentsResponse.json();
-      if (studentsResponse.ok) {
-        setStudents(studentsData.users || []);
+      // Fetch students for this institution from localStorage (added by teachers)
+      try {
+        const localStudents = JSON.parse(localStorage.getItem('teacherStudents') || '[]');
+        const institutionStudents = localStudents.filter(
+          s => (s.institution || '').toLowerCase() === decodedName.toLowerCase()
+        );
+        setStudents(institutionStudents);
+      } catch (e) {
+        console.error("Failed to load students from localStorage:", e);
+        setStudents([]);
       }
       
     } catch (err) {

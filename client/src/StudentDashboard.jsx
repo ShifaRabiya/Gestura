@@ -1,5 +1,5 @@
 // Dashboard.jsx
-import React from "react";
+import React, { useState, useEffect } from "react";
 import styled, { keyframes } from "styled-components";
 
 // ---------- Animations ----------
@@ -218,6 +218,16 @@ const GameCardWrapper = styled.div`
 
 // ---------- React Component ----------
 export default function StudentDashboard() {
+  const [studentData, setStudentData] = useState(null);
+
+  useEffect(() => {
+    // Get logged-in student data from localStorage
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    if (user.role === 'student') {
+      setStudentData(user);
+    }
+  }, []);
+
   const games = [
     {
       title: "Gesture Adventure",
@@ -238,6 +248,13 @@ export default function StudentDashboard() {
       buttonColor: "#f9d423"
     },
   ];
+
+  // Extract level number from "Level X" format
+  const currentLevel = studentData?.level ? 
+    (typeof studentData.level === 'string' ? 
+      parseInt(studentData.level.replace('Level ', '')) : 
+      studentData.level) : 
+    3;
 
   return (
     <AppWrapper>
@@ -267,9 +284,9 @@ export default function StudentDashboard() {
 
       <MainContainer>
         <WelcomeSection>
-          <h2>Welcome back, Lily!</h2>
+          <h2>Welcome back, {studentData?.name || 'Student'}!</h2>
           <div className="level">
-            <span>⭐</span> Current Level: 3
+            <span>⭐</span> Current Level: {currentLevel}
           </div>
         </WelcomeSection>
 
