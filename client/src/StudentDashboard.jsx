@@ -222,10 +222,25 @@ export default function StudentDashboard() {
 
   useEffect(() => {
     // Get logged-in student data from localStorage
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
-    if (user.role === 'student') {
-      setStudentData(user);
-    }
+    const loadStudentData = () => {
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      if (user.role === 'student') {
+        setStudentData(user);
+      }
+    };
+    
+    loadStudentData();
+    
+    // Listen for storage changes (when level is updated)
+    window.addEventListener('storage', loadStudentData);
+    
+    // Also check periodically for updates (in case same tab)
+    const interval = setInterval(loadStudentData, 1000);
+    
+    return () => {
+      window.removeEventListener('storage', loadStudentData);
+      clearInterval(interval);
+    };
   }, []);
 
   const games = [

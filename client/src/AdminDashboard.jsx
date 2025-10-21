@@ -8,9 +8,6 @@ const Container = styled.div`
   min-height: 100vh;
   font-family: 'Plus Jakarta Sans', sans-serif;
   background-color: #f0f8ff;
-  @media (prefers-color-scheme: dark) {
-    background-color: #101c22;
-  }
 `;
 
 const Sidebar = styled.aside`
@@ -20,10 +17,6 @@ const Sidebar = styled.aside`
   border-right: 1px solid #f0f8ff;
   padding: 1.5rem 0;
   backdrop-filter: blur(12px);
-  @media (prefers-color-scheme: dark) {
-    background-color: rgba(16, 28, 34, 0.8);
-    border-color: #101c22;
-  }
 `;
 
 const Logo = styled.h1`
@@ -78,9 +71,6 @@ const Card = styled.div`
   padding: 1.5rem;
   border-radius: 1rem;
   box-shadow: 0px 10px 30px rgba(0,0,0,0.07);
-  @media (prefers-color-scheme: dark) {
-    background-color: rgba(16,28,34,0.5);
-  }
 `;
 
 const Title = styled.h2`
@@ -88,13 +78,10 @@ const Title = styled.h2`
   font-weight: bold;
   margin-bottom: 1rem;
   color: #111827;
-  @media (prefers-color-scheme: dark) {
-    color: #f9fafb;
-  }
 `;
 
 const Input = styled.input`
-  width: 100%;
+  width: 90%;
   padding: 1rem;
   margin-bottom: 1rem;
   border-radius: 0.75rem;
@@ -103,11 +90,6 @@ const Input = styled.input`
   &:focus {
     outline: none;
     box-shadow: 0 0 0 2px rgba(13,166,242,0.3);
-  }
-  @media (prefers-color-scheme: dark) {
-    background-color: #1f2937;
-    border-color: #374151;
-    color: #f9fafb;
   }
 `;
 
@@ -122,11 +104,6 @@ const Select = styled.select`
   &:focus {
     outline: none;
     box-shadow: 0 0 0 2px rgba(13,166,242,0.3);
-  }
-  @media (prefers-color-scheme: dark) {
-    background-color: #1f2937;
-    border-color: #374151;
-    color: #f9fafb;
   }
 `;
 

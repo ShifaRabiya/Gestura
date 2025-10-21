@@ -23,7 +23,7 @@ const Wrapper = styled.div`
   position: relative;
   overflow: hidden;
   background-color: #87ceeb;
-  font-family: "Plus Jakarta Sans", sans-serif;
+  font-family: "Quicksand", cursive;
   color: #0f172a;
 `;
 

@@ -6,7 +6,7 @@ import { useNavigate, Link } from "react-router-dom";
 const Container = styled.div`
   display: flex;
   min-height: 100vh;
-  font-family: 'Lexend', sans-serif;
+  font-family: 'Quicksand', cursive;
 `;
 
 const Sidebar = styled.aside`
@@ -216,7 +216,6 @@ export default function TeacherDashboard() {
     studentId: "",
     grade: "",
     level: "",
-    institution: "",
     password: "",
   });
   const [reportFile, setReportFile] = useState(null);
@@ -277,7 +276,6 @@ export default function TeacherDashboard() {
       studentId: "",
       grade: "",
       level: "",
-      institution: "",
       password: "",
     });
     setActiveTab("view");
@@ -410,26 +408,6 @@ export default function TeacherDashboard() {
             ) : (
               <Form onSubmit={handleSubmit}>
                 {/* Student form fields as before */}
-                <FormGroup>
-                  <Label>Institution</Label>
-                  <select
-                    name="institution"
-                    value={newStudent.institution}
-                    onChange={handleChange}
-                    required
-                    style={{
-                      width: '100%',
-                      padding: '0.5rem 0.75rem',
-                      border: '1px solid #d1d5db',
-                      borderRadius: '0.5rem'
-                    }}
-                  >
-                    <option value="">{institutionsLoading ? 'Loading institutions...' : 'Select Institution'}</option>
-                    {institutions.map((inst, idx) => (
-                      <option key={idx} value={inst.name}>{inst.name}</option>
-                    ))}
-                  </select>
-                </FormGroup>
                 <FormGroup>
                   <Label>Student Name</Label>
                   <Input name="name" value={newStudent.name} onChange={handleChange} required />

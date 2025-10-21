@@ -372,7 +372,26 @@ export default function ViewDetails() {
     setSuccessMessage("");
     
     try {
-      // TODO: Save level to API
+      // Update level in localStorage teacherStudents
+      const students = JSON.parse(localStorage.getItem('teacherStudents') || '[]');
+      const updatedStudents = students.map(s => {
+        if (s.studentId === passedStudent?.studentId) {
+          return { ...s, level: `Level ${level}` };
+        }
+        return s;
+      });
+      localStorage.setItem('teacherStudents', JSON.stringify(updatedStudents));
+      
+      // Also update the user object if this student is currently logged in
+      const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+      if (currentUser.role === 'student' && currentUser.studentId === passedStudent?.studentId) {
+        currentUser.level = `Level ${level}`;
+        localStorage.setItem('user', JSON.stringify(currentUser));
+      }
+      
+      // Update local state
+      setStudentData(prev => ({ ...prev, level: `Level ${level}` }));
+      
       await new Promise(resolve => setTimeout(resolve, 500));
       
       setOriginalLevel(level);
