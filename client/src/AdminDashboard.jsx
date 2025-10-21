@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import { Link } from "react-router-dom";
 
@@ -8,9 +8,6 @@ const Container = styled.div`
   min-height: 100vh;
   font-family: 'Plus Jakarta Sans', sans-serif;
   background-color: #f0f8ff;
-  @media (prefers-color-scheme: dark) {
-    background-color: #101c22;
-  }
 `;
 
 const Sidebar = styled.aside`
@@ -20,10 +17,6 @@ const Sidebar = styled.aside`
   border-right: 1px solid #f0f8ff;
   padding: 1.5rem 0;
   backdrop-filter: blur(12px);
-  @media (prefers-color-scheme: dark) {
-    background-color: rgba(16, 28, 34, 0.8);
-    border-color: #101c22;
-  }
 `;
 
 const Logo = styled.h1`
@@ -78,9 +71,6 @@ const Card = styled.div`
   padding: 1.5rem;
   border-radius: 1rem;
   box-shadow: 0px 10px 30px rgba(0,0,0,0.07);
-  @media (prefers-color-scheme: dark) {
-    background-color: rgba(16,28,34,0.5);
-  }
 `;
 
 const Title = styled.h2`
@@ -88,13 +78,10 @@ const Title = styled.h2`
   font-weight: bold;
   margin-bottom: 1rem;
   color: #111827;
-  @media (prefers-color-scheme: dark) {
-    color: #f9fafb;
-  }
 `;
 
 const Input = styled.input`
-  width: 100%;
+  width: 90%;
   padding: 1rem;
   margin-bottom: 1rem;
   border-radius: 0.75rem;
@@ -104,10 +91,19 @@ const Input = styled.input`
     outline: none;
     box-shadow: 0 0 0 2px rgba(13,166,242,0.3);
   }
-  @media (prefers-color-scheme: dark) {
-    background-color: #1f2937;
-    border-color: #374151;
-    color: #f9fafb;
+`;
+
+const Select = styled.select`
+  width: 100%;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  border-radius: 0.75rem;
+  border: 1px solid #d1d5db;
+  background-color: #ffffff;
+  cursor: pointer;
+  &:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(13,166,242,0.3);
   }
 `;
 
@@ -118,9 +114,36 @@ const Button = styled.button`
   font-weight: bold;
   background-color: #0da6f2;
   color: white;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
   &:hover {
     background-color: #0b8ac9;
   }
+  &:disabled {
+    background-color: #cbd5e1;
+    cursor: not-allowed;
+  }
+`;
+
+const SuccessMessage = styled.div`
+  background: #d1fae5;
+  border: 1px solid #a7f3d0;
+  color: #065f46;
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+`;
+
+const ErrorMessage = styled.div`
+  background: #fee2e2;
+  border: 1px solid #fecaca;
+  color: #dc2626;
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
 `;
 
 const TableContainer = styled.div`
@@ -160,13 +183,145 @@ const StatusBadge = styled.span`
 export default function AdminDashboard() {
   const [activeView, setActiveView] = useState("dashboard");
   const [search, setSearch] = useState("");
+  
+  // Institution form state
+  const [institutionName, setInstitutionName] = useState("");
+  const [institutionError, setInstitutionError] = useState("");
+  const [institutionSuccess, setInstitutionSuccess] = useState("");
+  const [institutionLoading, setInstitutionLoading] = useState(false);
+  
+  // Teacher form state
+  const [teacherName, setTeacherName] = useState("");
+  const [teacherEmail, setTeacherEmail] = useState("");
+  const [teacherPassword, setTeacherPassword] = useState("");
+  const [teacherInstitution, setTeacherInstitution] = useState("");
+  const [teacherError, setTeacherError] = useState("");
+  const [teacherSuccess, setTeacherSuccess] = useState("");
+  const [teacherLoading, setTeacherLoading] = useState(false);
+  
+  // Institutions list
+  const [institutions, setInstitutions] = useState([]);
+  const [institutionsLoading, setInstitutionsLoading] = useState(false);
 
-  const institutions = [
-    { name: "Sunshine Academy", teachers: 15, students: 120, status: "Active" },
-    { name: "Bright Minds School", teachers: 8, students: 75, status: "Active" },
-    { name: "Hopeful Hearts Center", teachers: 12, students: 98, status: "Pending" },
-    { name: "Evergreen Institute", teachers: 20, students: 150, status: "Inactive" },
-  ];
+  // Derive student counts per institution from localStorage (students added by teachers)
+  const getLocalStudentCount = (institutionName) => {
+    try {
+      const local = JSON.parse(localStorage.getItem('teacherStudents') || '[]');
+      console.log('All students in localStorage:', local);
+      console.log('Looking for institution:', institutionName);
+      const filtered = local.filter(s => {
+        const studentInst = (s.institution || '').toLowerCase();
+        const searchInst = (institutionName || '').toLowerCase();
+        console.log(`Comparing: "${studentInst}" === "${searchInst}"`, studentInst === searchInst);
+        return studentInst === searchInst;
+      });
+      console.log('Filtered students for', institutionName, ':', filtered);
+      return filtered.length;
+    } catch (e) {
+      console.error('Error getting student count:', e);
+      return 0;
+    }
+  };
+  
+  // Fetch institutions from API
+  const fetchInstitutions = async () => {
+    setInstitutionsLoading(true);
+    try {
+      const response = await fetch("http://localhost:5000/api/institutions");
+      const data = await response.json();
+      
+      if (response.ok) {
+        setInstitutions(data.institutions || []);
+      }
+    } catch (err) {
+      console.error("Failed to fetch institutions:", err);
+    } finally {
+      setInstitutionsLoading(false);
+    }
+  };
+  
+  // Fetch institutions on component mount
+  useEffect(() => {
+    fetchInstitutions();
+  }, []);
+  
+  // Handle institution submission
+  const handleAddInstitution = async (e) => {
+    e.preventDefault();
+    setInstitutionError("");
+    setInstitutionSuccess("");
+    setInstitutionLoading(true);
+    
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch("http://localhost:5000/api/institutions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+        },
+        body: JSON.stringify({ name: institutionName }),
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok) {
+        setInstitutionSuccess(`Institution "${institutionName}" added successfully!`);
+        setInstitutionName("");
+        // Refresh institutions list
+        fetchInstitutions();
+      } else {
+        setInstitutionError(data.message || "Failed to add institution");
+      }
+    } catch (err) {
+      setInstitutionError("Connection error. Please make sure the server is running.");
+    } finally {
+      setInstitutionLoading(false);
+    }
+  };
+  
+  // Handle teacher submission
+  const handleAddTeacher = async (e) => {
+    e.preventDefault();
+    setTeacherError("");
+    setTeacherSuccess("");
+    setTeacherLoading(true);
+    
+    try {
+      const response = await fetch("http://localhost:5000/api/auth/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: teacherName,
+          email: teacherEmail,
+          password: teacherPassword,
+          role: "teacher",
+          institution: teacherInstitution,
+        }),
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok) {
+        setTeacherSuccess(`Teacher "${teacherName}" added successfully!`);
+        setTeacherName("");
+        setTeacherEmail("");
+        setTeacherPassword("");
+        setTeacherInstitution("");
+        // Refresh institutions list to update counts
+        fetchInstitutions();
+      } else {
+        setTeacherError(data.message || "Failed to add teacher");
+      }
+    } catch (err) {
+      setTeacherError("Connection error. Please make sure the server is running.");
+    } finally {
+      setTeacherLoading(false);
+    }
+  };
+
 
   const getStatusColor = (status) => {
     switch(status) {
@@ -201,18 +356,60 @@ export default function AdminDashboard() {
           <SectionContainer>
             <Card>
               <Title>Add Institution</Title>
-              <form>
-                <Input placeholder="Institution Name" type="text" />
-                <Button type="submit">Add Institution</Button>
+              {institutionSuccess && <SuccessMessage>{institutionSuccess}</SuccessMessage>}
+              {institutionError && <ErrorMessage>{institutionError}</ErrorMessage>}
+              <form onSubmit={handleAddInstitution}>
+                <Input 
+                  placeholder="Institution Name" 
+                  type="text" 
+                  value={institutionName}
+                  onChange={(e) => setInstitutionName(e.target.value)}
+                  required
+                />
+                <Button type="submit" disabled={institutionLoading}>
+                  {institutionLoading ? "Adding..." : "Add Institution"}
+                </Button>
               </form>
             </Card>
             <Card>
               <Title>Add Teacher</Title>
-              <form>
-                <Input placeholder="Teacher Name" type="text" />
-                <Input placeholder="Email" type="email" />
-                <Input placeholder="Password" type="password" />
-                <Button type="submit">Add Teacher</Button>
+              {teacherSuccess && <SuccessMessage>{teacherSuccess}</SuccessMessage>}
+              {teacherError && <ErrorMessage>{teacherError}</ErrorMessage>}
+              <form onSubmit={handleAddTeacher}>
+                <Select 
+                  value={teacherInstitution}
+                  onChange={(e) => setTeacherInstitution(e.target.value)}
+                  required
+                >
+                  <option value="">Select Institution</option>
+                  {institutions.map((inst, idx) => (
+                    <option key={idx} value={inst.name}>{inst.name}</option>
+                  ))}
+                </Select>
+                <Input 
+                  placeholder="Teacher Name" 
+                  type="text" 
+                  value={teacherName}
+                  onChange={(e) => setTeacherName(e.target.value)}
+                  required
+                />
+                <Input 
+                  placeholder="Email" 
+                  type="email" 
+                  value={teacherEmail}
+                  onChange={(e) => setTeacherEmail(e.target.value)}
+                  required
+                />
+                <Input 
+                  placeholder="Password" 
+                  type="password" 
+                  value={teacherPassword}
+                  onChange={(e) => setTeacherPassword(e.target.value)}
+                  required
+                />
+                <Button type="submit" disabled={teacherLoading}>
+                  {teacherLoading ? "Adding..." : "Add Teacher"}
+                </Button>
               </form>
             </Card>
           </SectionContainer>
@@ -226,47 +423,58 @@ export default function AdminDashboard() {
               value={search} 
               onChange={(e) => setSearch(e.target.value)} 
             />
-            <TableContainer>
-              <Table>
-                <thead>
-                  <tr>
-                    <Th>Name</Th>
-                    <Th>Teachers</Th>
-                    <Th>Students</Th>
-                    <Th>Status</Th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {institutions
-                    .filter(i => i.name.toLowerCase().includes(search.toLowerCase()))
-                    .map((inst, idx) => (
-                      <tr key={idx}>
-                        <Td>{inst.name}</Td>
-                        <Td>{inst.teachers}</Td>
-                        <Td>{inst.students}</Td>
-                        <Td>
-                          <StatusBadge {...getStatusColor(inst.status)}>{inst.status}</StatusBadge>
-                        </Td>
-                        <Td>
-                          <Link
-                              to="/institution-profile"
-                              style={{
-                                padding: "0.25rem 0.75rem",
-                                fontSize: "0.75rem",
-                                backgroundColor: "#0da6f2",
-                                color: "white",
-                                borderRadius: "0.5rem",
-                                textDecoration: "none",
-                              }}
-                            >
-                            View Details
-                          </Link>
-                        </Td>
-                      </tr>
-                    ))}
-                </tbody>
-              </Table>
-            </TableContainer>
+            {institutionsLoading ? (
+              <p style={{ textAlign: "center", padding: "2rem", color: "#6b7280" }}>
+                Loading institutions...
+              </p>
+            ) : institutions.length === 0 ? (
+              <p style={{ textAlign: "center", padding: "2rem", color: "#6b7280" }}>
+                No institutions found. Add one from the Dashboard.
+              </p>
+            ) : (
+              <TableContainer>
+                <Table>
+                  <thead>
+                    <tr>
+                      <Th>Name</Th>
+                      <Th>Teachers</Th>
+                      <Th>Students</Th>
+                      <Th>Status</Th>
+                      <Th>Actions</Th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {institutions
+                      .filter(i => i.name.toLowerCase().includes(search.toLowerCase()))
+                      .map((inst, idx) => (
+                        <tr key={idx}>
+                          <Td>{inst.name}</Td>
+                          <Td>{inst.teachers || 0}</Td>
+                          <Td>{getLocalStudentCount(inst.name)}</Td>
+                          <Td>
+                            <StatusBadge {...getStatusColor(inst.status)}>{inst.status}</StatusBadge>
+                          </Td>
+                          <Td>
+                            <Link
+                                to={`/institution-profile/${encodeURIComponent(inst.name)}`}
+                                style={{
+                                  padding: "0.25rem 0.75rem",
+                                  fontSize: "0.75rem",
+                                  backgroundColor: "#0da6f2",
+                                  color: "white",
+                                  borderRadius: "0.5rem",
+                                  textDecoration: "none",
+                                }}
+                              >
+                              View Details
+                            </Link>
+                          </Td>
+                        </tr>
+                      ))}
+                  </tbody>
+                </Table>
+              </TableContainer>
+            )}
           </>
         )}
 

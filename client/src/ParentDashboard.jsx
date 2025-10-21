@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 
 const Container = styled.div`
@@ -177,6 +177,29 @@ const FeedbackText = styled.p`
 `;
 
 export default function ParentDashboard() {
+  const [parentData, setParentData] = useState(null);
+  const [studentData, setStudentData] = useState(null);
+
+  useEffect(() => {
+    // Get logged-in parent data from localStorage
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    if (user.role === 'parent') {
+      setParentData(user);
+      
+      // Find the student data from teacherStudents
+      const students = JSON.parse(localStorage.getItem('teacherStudents') || '[]');
+      const child = students.find(s => s.studentId === user.studentId);
+      setStudentData(child);
+    }
+  }, []);
+
+  // Extract level number
+  const currentLevel = studentData?.level ? 
+    (typeof studentData.level === 'string' ? 
+      parseInt(studentData.level.replace('Level ', '')) : 
+      studentData.level) : 
+    3;
+
   return (
     <Container>
       <Header>
@@ -208,12 +231,16 @@ export default function ParentDashboard() {
         <Section>
           <ChildInfo>
             <ChildImg
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuBtoxodHFcm333X5bYA_OtgWF1dIOvChUzxfid7nyTiqhZiRR5cawKYJRYcroLVbmt2U23_s2bUudXMcqZL_1MvTzUg4SoRy2wMOz8dhlJXQwUh7bbA2DUAHciQz4PMu2GSFpQjGZJHmQZnxOdAS343NGHuDvivqkh2RKD79HO0a4eRpcLynGqKc1cRzAgBv-6ZRBie75CLCx2k5IF_G2Zr9YNQZbs1crg4dp0JFg_jVy4DGi53G_JGBlKtouzaWZwWZjf0GaD2C6__"
-              alt="Alex Johnson"
+              src={studentData?.photo || studentData?.avatar || "https://lh3.googleusercontent.com/aida-public/AB6AXuBtoxodHFcm333X5bYA_OtgWF1dIOvChUzxfid7nyTiqhZiRR5cawKYJRYcroLVbmt2U23_s2bUudXMcqZL_1MvTzUg4SoRy2wMOz8dhlJXQwUh7bbA2DUAHciQz4PMu2GSFpQjGZJHmQZnxOdAS343NGHuDvivqkh2RKD79HO0a4eRpcLynGqKc1cRzAgBv-6ZRBie75CLCx2k5IF_G2Zr9YNQZbs1crg4dp0JFg_jVy4DGi53G_JGBlKtouzaWZwWZjf0GaD2C6__"}
+              alt={studentData?.name || "Student"}
             />
             <ChildText>
-              <ChildName>Alex Johnson</ChildName>
-              <ChildDetails>Age: 8, Grade: 2</ChildDetails>
+              <ChildName>{studentData?.name || 'Your Child'}</ChildName>
+              <ChildDetails>
+                Age: {studentData?.age?.replace(' years', '') || 'N/A'}, 
+                Grade: {studentData?.grade || 'N/A'}, 
+                Level: {currentLevel}
+              </ChildDetails>
             </ChildText>
           </ChildInfo>
         </Section>

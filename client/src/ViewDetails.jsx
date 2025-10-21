@@ -1,6 +1,6 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import styled from "styled-components";
-import { useParams } from "react-router-dom";
+import { useParams, useLocation } from "react-router-dom";
 
 // ---------------- Styled Components ----------------
 const Container = styled.div`
@@ -109,6 +109,76 @@ const Badge = styled.span`
   margin-right: 0.5rem;
 `;
 
+const LevelControl = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+`;
+
+const LevelButton = styled.button`
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid #389cfa;
+  background: white;
+  color: #389cfa;
+  font-size: 1.1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s;
+  
+  &:hover {
+    background: #389cfa;
+    color: white;
+  }
+  
+  &:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
+`;
+
+const LevelDisplay = styled.div`
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #389cfa;
+  min-width: 80px;
+  text-align: center;
+`;
+
+const SaveButton = styled.button`
+  background: #389cfa;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  border: none;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  
+  &:hover {
+    background: #2d7ac9;
+  }
+  
+  &:disabled {
+    background: #cbd5e1;
+    cursor: not-allowed;
+  }
+`;
+
+const SuccessMessage = styled.div`
+  background: #d1fae5;
+  border: 1px solid #a7f3d0;
+  color: #065f46;
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+  text-align: center;
+`;
+
 const Grid = styled.div`
   display: grid;
   grid-template-columns: 1fr;
@@ -209,7 +279,140 @@ const OverallProgress = styled.div`
 
 // ---------------- Main Component ----------------
 export default function ViewDetails() {
-    const { studentId } = useParams();
+  const { studentId } = useParams();
+  const location = useLocation();
+  const passedStudent = location.state?.student;
+  
+  const [level, setLevel] = useState(3);
+  const [originalLevel, setOriginalLevel] = useState(3);
+  const [saving, setSaving] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
+  const [studentData, setStudentData] = useState(null);
+
+  useEffect(() => {
+    if (passedStudent) {
+      // Use the passed student data
+      const levelNum = passedStudent.level ? parseInt(passedStudent.level.replace('Level ', '')) : 3;
+      setLevel(levelNum);
+      setOriginalLevel(levelNum);
+      
+      // Format the student data
+      const formattedData = {
+        name: passedStudent.name,
+        id: passedStudent.studentId || Math.floor(10000 + Math.random() * 90000).toString(),
+        grade: passedStudent.grade || 5,
+        age: passedStudent.age ? passedStudent.age.replace(' years', '') : 10,
+        mentalAge: passedStudent.mentalAge || 8,
+        parentName: passedStudent.parent || "Parent Name",
+        emergencyContact: passedStudent.emergencyContact || "+1-555-000-0000",
+        avatar: passedStudent.photo || passedStudent.avatar || "",
+        progress: {
+          cognitive: Math.floor(Math.random() * 30) + 65,
+          motorSkills: Math.floor(Math.random() * 30) + 60,
+          social: Math.floor(Math.random() * 35) + 55,
+          emotional: Math.floor(Math.random() * 30) + 65,
+        }
+      };
+      
+      const overall = Math.floor(
+        (formattedData.progress.cognitive + formattedData.progress.motorSkills + 
+         formattedData.progress.social + formattedData.progress.emotional) / 4
+      );
+      formattedData.progress.overall = overall;
+      
+      setStudentData(formattedData);
+    } else {
+      // Generate random student data as fallback
+      const generateStudentData = () => {
+        const firstNames = ["Sophia", "Liam", "Emma", "Noah", "Olivia", "Ava", "Isabella"];
+        const lastNames = ["Clark", "Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia"];
+        const parentFirstNames = ["Emily", "Michael", "Sarah", "David", "Jennifer", "Robert"];
+        
+        const randomFirst = firstNames[Math.floor(Math.random() * firstNames.length)];
+        const randomLast = lastNames[Math.floor(Math.random() * lastNames.length)];
+        const randomParent = parentFirstNames[Math.floor(Math.random() * parentFirstNames.length)];
+        
+        return {
+          name: `${randomFirst} ${randomLast}`,
+          id: studentId || Math.floor(10000 + Math.random() * 90000).toString(),
+          grade: Math.floor(Math.random() * 5) + 3,
+          age: Math.floor(Math.random() * 4) + 8,
+          mentalAge: Math.floor(Math.random() * 4) + 6,
+          parentName: `${randomParent} ${randomLast}`,
+          emergencyContact: `+1-555-${Math.floor(100 + Math.random() * 900)}-${Math.floor(1000 + Math.random() * 9000)}`,
+          progress: {
+            cognitive: Math.floor(Math.random() * 30) + 65,
+            motorSkills: Math.floor(Math.random() * 30) + 60,
+            social: Math.floor(Math.random() * 35) + 55,
+            emotional: Math.floor(Math.random() * 30) + 65,
+          }
+        };
+      };
+      
+      const data = generateStudentData();
+      const overall = Math.floor(
+        (data.progress.cognitive + data.progress.motorSkills + 
+         data.progress.social + data.progress.emotional) / 4
+      );
+      data.progress.overall = overall;
+      
+      setStudentData(data);
+    }
+  }, [studentId, passedStudent]);
+
+  const handleLevelChange = (increment) => {
+    setLevel(prev => {
+      const newLevel = prev + increment;
+      return Math.max(1, Math.min(10, newLevel));
+    });
+  };
+
+  const handleSaveLevel = async () => {
+    setSaving(true);
+    setSuccessMessage("");
+    
+    try {
+      // Update level in localStorage teacherStudents
+      const students = JSON.parse(localStorage.getItem('teacherStudents') || '[]');
+      const updatedStudents = students.map(s => {
+        if (s.studentId === passedStudent?.studentId) {
+          return { ...s, level: `Level ${level}` };
+        }
+        return s;
+      });
+      localStorage.setItem('teacherStudents', JSON.stringify(updatedStudents));
+      
+      // Also update the user object if this student is currently logged in
+      const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+      if (currentUser.role === 'student' && currentUser.studentId === passedStudent?.studentId) {
+        currentUser.level = `Level ${level}`;
+        localStorage.setItem('user', JSON.stringify(currentUser));
+      }
+      
+      // Update local state
+      setStudentData(prev => ({ ...prev, level: `Level ${level}` }));
+      
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      setOriginalLevel(level);
+      setSuccessMessage(`Student level updated to ${level} successfully!`);
+      setTimeout(() => setSuccessMessage(""), 3000);
+    } catch (err) {
+      console.error("Failed to save level:", err);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (!studentData) {
+    return (
+      <Container>
+        <p style={{ textAlign: "center", padding: "3rem", color: "#6b7280" }}>
+          Loading student profile...
+        </p>
+      </Container>
+    );
+  }
   return (
     <Container>
       <Header>
@@ -228,15 +431,38 @@ export default function ViewDetails() {
         <SectionTitle>Student Profile</SectionTitle>
         <SectionSubtitle>View and manage student details and progress.</SectionSubtitle>
 
+        {successMessage && <SuccessMessage>{successMessage}</SuccessMessage>}
+
         <ProfileCard>
           <Avatar />
           <ProfileInfo>
-            <Name>Sophia Clark</Name>
-            <StudentID>Student ID: 12345</StudentID>
+            <Name>{studentData.name}</Name>
+            <StudentID>Student ID: {studentData.id}</StudentID>
             <div style={{ marginTop: "0.5rem" }}>
-              <Badge>Grade: 5</Badge>
-              <Badge>Game Level: 3</Badge>
+              <Badge>Grade: {studentData.grade}</Badge>
             </div>
+            <LevelControl>
+              <span style={{ fontSize: "0.875rem", color: "#6b7280", fontWeight: "500" }}>Game Level:</span>
+              <LevelButton 
+                onClick={() => handleLevelChange(-1)}
+                disabled={level <= 1}
+              >
+                −
+              </LevelButton>
+              <LevelDisplay>Level {level}</LevelDisplay>
+              <LevelButton 
+                onClick={() => handleLevelChange(1)}
+                disabled={level >= 10}
+              >
+                +
+              </LevelButton>
+              <SaveButton 
+                onClick={handleSaveLevel}
+                disabled={saving || level === originalLevel}
+              >
+                {saving ? "Saving..." : "Save Level"}
+              </SaveButton>
+            </LevelControl>
           </ProfileInfo>
         </ProfileCard>
 
@@ -245,42 +471,42 @@ export default function ViewDetails() {
             <h3 style={{ fontWeight: 700, marginBottom: "1rem", color: "#1f2937" }}>Student Information</h3>
             <InfoItem>
             <InfoLabel>Parent Name</InfoLabel>
-            <InfoValue>Emily Clark</InfoValue>
+            <InfoValue>{studentData.parentName}</InfoValue>
             </InfoItem>
             <InfoItem>
             <InfoLabel>Age</InfoLabel>
-            <InfoValue>10</InfoValue>
+            <InfoValue>{studentData.age}</InfoValue>
             </InfoItem>
             <InfoItem>
             <InfoLabel>Mental Age</InfoLabel>
-            <InfoValue>8</InfoValue>
+            <InfoValue>{studentData.mentalAge}</InfoValue>
             </InfoItem>
             <InfoItem>
             <InfoLabel>Emergency Contact</InfoLabel>
-            <InfoValue>+1-555-123-4567</InfoValue>
+            <InfoValue>{studentData.emergencyContact}</InfoValue>
             </InfoItem>
         </InfoCard>
 
         <ProgressGrid>
             <div>
-            <Pie progress={85} color="#389cfa" />
+            <Pie progress={studentData.progress.cognitive} color="#389cfa" />
             <ProgressText>Cognitive</ProgressText>
             </div>
             <div>
-            <Pie progress={90} color="#389cfa" />
+            <Pie progress={studentData.progress.motorSkills} color="#389cfa" />
             <ProgressText>Motor Skills</ProgressText>
             </div>
             <div>
-            <Pie progress={60} color="#389cfa" />
+            <Pie progress={studentData.progress.social} color="#389cfa" />
             <ProgressText>Social</ProgressText>
             </div>
             <div>
-            <Pie progress={70} color="#389cfa" />
+            <Pie progress={studentData.progress.emotional} color="#389cfa" />
             <ProgressText>Emotional</ProgressText>
             </div>
             <OverallProgress>
             <ProgressText>Overall Progress</ProgressText>
-            <ProgressText large>75%</ProgressText>
+            <ProgressText large>{studentData.progress.overall}%</ProgressText>
             </OverallProgress>
         </ProgressGrid>
         </CardRow>

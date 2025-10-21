@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import { useNavigate, Link } from "react-router-dom";
 
@@ -6,7 +6,7 @@ import { useNavigate, Link } from "react-router-dom";
 const Container = styled.div`
   display: flex;
   min-height: 100vh;
-  font-family: 'Lexend', sans-serif;
+  font-family: 'Quicksand', cursive;
 `;
 
 const Sidebar = styled.aside`
@@ -195,32 +195,15 @@ const SubmitButton = styled.button`
   }
 `;
 
-// ---------------- Sample Data ----------------
-const initialStudents = [
-  {
-    name: "Sophia Clark",
-    age: "7 years",
-    level: "Level 3",
-    avatar: "https://lh3.googleusercontent.com/aida-public/AB6AXuA3X15ZK5mIBQ5jptcxUMNZDvaKiDLM0t9V67IbuVXfkeQa7K8gpQcuFEvtsQXODnQiaB9XwOTSQ7UbTfZz8n24HXWDhWYoTEifam3dgZoacAr72YNBE1NpWtr46X5ocvp9ZfGjp2pK9z8TX1LHFF77dzqNV56jrsfJhg6U7teb870WvmlyMju6c6peCTxVkq6fXGK-W_RTlU8ICJM2rP1jPE_4JQZTHIKPG1smccBL93o6H3XIDvG0osMCjTj0-dO063XuwGlWwItd",
-  },
-  {
-    name: "Ethan Carter",
-    age: "9 years",
-    level: "Level 5",
-    avatar: "https://lh3.googleusercontent.com/aida-public/AB6AXuDfj2YwaKfpQd2yZPhdZ_HY1ANZZ5YREbLrieaNO_LfpXgRTg6EEJIXtV-p2uVD_dDBmuJvliQvPiWJuILuGyMckkAtGmEZgtrnrujc71rYLw-mNffXD_iT2YIW0nrmVb5WH73WT0Z3PBEJEbde0srXkgovcjTMGa0G9U7f0HgPteIoqLpbebOplVTOr1AoueDGKa_tew-TPLALhPZsEqjePD9SLEsntmLKw0aefZ-OLw7C-dezPcqPlCZOq68ywqlc5T98N0Ir6SXb",
-  },
-  {
-    name: "Olivia Bennett",
-    age: "6 years",
-    level: "Level 2",
-    avatar: "https://lh3.googleusercontent.com/aida-public/AB6AXuC4UNA9CHQtmQTiI8eYsjrOJ1h6CZs83WpKdG3p9hh4aPOZuvXviH8PBj7sKQHDxWQmvfcqX3RaZD0cPi7_dhw-sAC6CzCBI3kFN8FLBR8AC8XbfUUOoavgOa4O7AM1u7L-6lYCpWLqhqSHwec1beZO2YrAaJ3fjFK_DW5bHjOxeVV3N856-H0RBXs7OcRf74Fxv5zqb-WIPZ3--5EN6WeT8XFp4g2DtfN09FT3yrqTV3qsM0h42MMJom-cwz27_OUmE3cRKZnX-QxT",
-  },
-];
+// No static data - students will be added through the form
 
 // ---------------- Main Component ----------------
-// Add to TeacherDashboard component
 export default function TeacherDashboard() {
-  const [students, setStudents] = useState(initialStudents);
+  // Load students from localStorage or start with empty array
+  const [students, setStudents] = useState(() => {
+    const savedStudents = localStorage.getItem('teacherStudents');
+    return savedStudents ? JSON.parse(savedStudents) : [];
+  });
   const [activeTab, setActiveTab] = useState("view"); // "view" or "add"
   const [activeSidebar, setActiveSidebar] = useState("students"); // "students" or "reports"
   const [newStudent, setNewStudent] = useState({
@@ -233,18 +216,56 @@ export default function TeacherDashboard() {
     studentId: "",
     grade: "",
     level: "",
+    password: "",
   });
   const [reportFile, setReportFile] = useState(null);
   const navigate = useNavigate();
+  // Institutions list for the select
+  const [institutions, setInstitutions] = useState([]);
+  const [institutionsLoading, setInstitutionsLoading] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setNewStudent((prev) => ({ ...prev, [name]: value }));
   };
 
+  // Save students to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem('teacherStudents', JSON.stringify(students));
+  }, [students]);
+
+  // Fetch institutions to populate the select
+  useEffect(() => {
+    const fetchInstitutions = async () => {
+      setInstitutionsLoading(true);
+      try {
+        const res = await fetch('http://localhost:5000/api/institutions');
+        const data = await res.json();
+        if (res.ok) setInstitutions(data.institutions || []);
+      } catch (e) {
+        console.error('Failed to fetch institutions for teacher form:', e);
+      } finally {
+        setInstitutionsLoading(false);
+      }
+    };
+    fetchInstitutions();
+  }, []);
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    setStudents((prev) => [...prev, newStudent]);
+    
+    // Format the student data before adding
+    const formattedStudent = {
+      ...newStudent,
+      age: `${newStudent.age} years`,
+      level: newStudent.level.startsWith('Level') ? newStudent.level : `Level ${newStudent.level}`,
+      avatar: newStudent.photo || "https://via.placeholder.com/150"
+    };
+    
+    console.log('Adding student with institution:', formattedStudent.institution);
+    console.log('Full student data:', formattedStudent);
+    
+    setStudents((prev) => [...prev, formattedStudent]);
     setNewStudent({
       name: "",
       photo: "",
@@ -255,6 +276,7 @@ export default function TeacherDashboard() {
       studentId: "",
       grade: "",
       level: "",
+      password: "",
     });
     setActiveTab("view");
   };
@@ -316,35 +338,72 @@ export default function TeacherDashboard() {
                 <SearchWrapper>
                   <SearchInput placeholder="Search students" />
                 </SearchWrapper>
-                <TableWrapper>
-                  <Table>
-                    <thead>
-                      <tr>
-                        <Th>Student</Th>
-                        <Th>Mental Age</Th>
-                        <Th>Current Game Level</Th>
-                        <Th>Actions</Th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {students.map((student, index) => (
-                        <tr key={index}>
-                          <Td>
-                            <div style={{ display: "flex", alignItems: "center" }}>
-                              <Avatar src={student.photo || student.avatar || ""} />
-                              <span>{student.name}</span>
-                            </div>
-                          </Td>
-                          <Td>{student.mentalAge || student.age}</Td>
-                          <Td>{student.level}</Td>
-                          <Td>
-                            <ActionLink as={Link} to="/view-details">View Details</ActionLink>
-                          </Td>
+                {students.length === 0 ? (
+                  <div style={{ 
+                    textAlign: "center", 
+                    padding: "3rem", 
+                    background: "white", 
+                    borderRadius: "0.5rem",
+                    color: "#6b7280"
+                  }}>
+                    <h3 style={{ fontSize: "1.25rem", marginBottom: "0.5rem", color: "#374151" }}>
+                      No Students Yet
+                    </h3>
+                    <p style={{ marginBottom: "1rem" }}>
+                      You haven't added any students yet. Click "Add New Student" to get started!
+                    </p>
+                    <button
+                      onClick={() => setActiveTab("add")}
+                      style={{
+                        background: "#389cfa",
+                        color: "white",
+                        padding: "0.75rem 1.5rem",
+                        borderRadius: "0.5rem",
+                        border: "none",
+                        cursor: "pointer",
+                        fontWeight: "600"
+                      }}
+                    >
+                      Add Your First Student
+                    </button>
+                  </div>
+                ) : (
+                  <TableWrapper>
+                    <Table>
+                      <thead>
+                        <tr>
+                          <Th>Student</Th>
+                          <Th>Mental Age</Th>
+                          <Th>Current Game Level</Th>
+                          <Th>Actions</Th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </Table>
-                </TableWrapper>
+                      </thead>
+                      <tbody>
+                        {students.map((student, index) => (
+                          <tr key={index}>
+                            <Td>
+                              <div style={{ display: "flex", alignItems: "center" }}>
+                                <Avatar src={student.photo || student.avatar || ""} />
+                                <span>{student.name}</span>
+                              </div>
+                            </Td>
+                            <Td>{student.mentalAge || student.age}</Td>
+                            <Td>{student.level}</Td>
+                            <Td>
+                              <ActionLink 
+                                as={Link} 
+                                to="/view-details" 
+                                state={{ student }}
+                              >
+                                View Details
+                              </ActionLink>
+                            </Td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </Table>
+                  </TableWrapper>
+                )}
               </>
             ) : (
               <Form onSubmit={handleSubmit}>
@@ -354,26 +413,44 @@ export default function TeacherDashboard() {
                   <Input name="name" value={newStudent.name} onChange={handleChange} required />
                 </FormGroup>
                 <FormGroup>
-                  <Label>Student Photo</Label>
+                  <Label>Student Photo URL (optional)</Label>
                   <Input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) =>
-                      setNewStudent((prev) => ({ ...prev, photo: e.target.files[0] }))
-                    }
+                    name="photo"
+                    type="text"
+                    placeholder="Enter photo URL or leave blank for default"
+                    value={newStudent.photo}
+                    onChange={handleChange}
                   />
                 </FormGroup>
                 <FormGroup>
                   <Label>Age</Label>
-                  <Input name="age" value={newStudent.age} onChange={handleChange} required />
+                  <Input 
+                    name="age" 
+                    type="number"
+                    min="1"
+                    max="20"
+                    placeholder="Enter age"
+                    value={newStudent.age} 
+                    onChange={handleChange} 
+                    required 
+                  />
                 </FormGroup>
                 <FormGroup>
                   <Label>Mental Age</Label>
-                  <Input name="mentalAge" value={newStudent.mentalAge} onChange={handleChange} required />
+                  <Input 
+                    name="mentalAge" 
+                    type="number"
+                    min="1"
+                    max="20"
+                    placeholder="Enter mental age"
+                    value={newStudent.mentalAge} 
+                    onChange={handleChange} 
+                    required 
+                  />
                 </FormGroup>
                 <FormGroup>
                   <Label>Parent Name</Label>
-                  <Input name="guardian" value={newStudent.guardian} onChange={handleChange} required />
+                  <Input name="parent" value={newStudent.parent} onChange={handleChange} required />
                 </FormGroup>
                 <FormGroup>
                   <Label>Emergency Contact Number</Label>
@@ -384,12 +461,32 @@ export default function TeacherDashboard() {
                   <Input name="studentId" value={newStudent.studentId} onChange={handleChange} required />
                 </FormGroup>
                 <FormGroup>
+                  <Label>Password (for student login)</Label>
+                  <Input 
+                    name="password" 
+                    type="password"
+                    placeholder="Set password for student"
+                    value={newStudent.password} 
+                    onChange={handleChange} 
+                    required 
+                  />
+                </FormGroup>
+                <FormGroup>
                   <Label>Grade</Label>
                   <Input name="grade" value={newStudent.grade} onChange={handleChange} required />
                 </FormGroup>
                 <FormGroup>
                   <Label>Game Level</Label>
-                  <Input name="level" value={newStudent.level} onChange={handleChange} required />
+                  <Input 
+                    name="level" 
+                    type="number"
+                    min="1"
+                    max="10"
+                    placeholder="Enter level (1-10)"
+                    value={newStudent.level} 
+                    onChange={handleChange} 
+                    required 
+                  />
                 </FormGroup>
                 <SubmitButton type="submit">Add Student</SubmitButton>
               </Form>

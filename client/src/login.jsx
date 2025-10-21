@@ -23,7 +23,7 @@ const Wrapper = styled.div`
   position: relative;
   overflow: hidden;
   background-color: #87ceeb;
-  font-family: "Plus Jakarta Sans", sans-serif;
+  font-family: "Quicksand", cursive;
   color: #0f172a;
 `;
 
@@ -209,6 +209,9 @@ const Login = () => {
   const [role, setRole] = useState("student");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [parentName, setParentName] = useState("");
+  const [studentId, setStudentId] = useState("");
+  const [studentPassword, setStudentPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -219,6 +222,61 @@ const Login = () => {
     setLoading(true);
 
     try {
+      // Student login uses Student ID + Password
+      if (role === "student") {
+        const students = JSON.parse(localStorage.getItem('teacherStudents') || '[]');
+        const matchingStudent = students.find(
+          s => s.studentId === studentId && s.password === studentPassword
+        );
+
+        if (matchingStudent) {
+          const studentUser = {
+            role: "student",
+            name: matchingStudent.name,
+            studentId: matchingStudent.studentId,
+            institution: matchingStudent.institution,
+            grade: matchingStudent.grade,
+            level: matchingStudent.level
+          };
+          
+          localStorage.setItem("user", JSON.stringify(studentUser));
+          navigate("/dashboard");
+        } else {
+          setError("Invalid Student ID or Password. Please check and try again.");
+        }
+        setLoading(false);
+        return;
+      }
+
+      // Parent login uses different authentication
+      if (role === "parent") {
+        // Check localStorage for student with matching parent name and student ID
+        const students = JSON.parse(localStorage.getItem('teacherStudents') || '[]');
+        const matchingStudent = students.find(
+          s => s.parent?.toLowerCase() === parentName.toLowerCase() && 
+               s.studentId === studentId
+        );
+
+        if (matchingStudent) {
+          // Create a parent user object
+          const parentUser = {
+            role: "parent",
+            name: parentName,
+            studentId: studentId,
+            studentName: matchingStudent.name,
+            institution: matchingStudent.institution
+          };
+          
+          localStorage.setItem("user", JSON.stringify(parentUser));
+          navigate("/parent-dashboard");
+        } else {
+          setError("Invalid Parent Name or Student ID. Please check and try again.");
+        }
+        setLoading(false);
+        return;
+      }
+
+      // Regular login for teacher and admin
       const response = await fetch("http://localhost:5000/api/auth/login", {
         method: "POST",
         headers: {
@@ -244,7 +302,6 @@ const Login = () => {
         // Navigate based on role
         if (role === "student") navigate("/dashboard");
         else if (role === "teacher") navigate("/teacher-dashboard");
-        else if (role === "parent") navigate("/parent-dashboard");
         else if (role === "admin") navigate("/admin-dashboard");
       } else {
         setError(data.message || "Incorrect credentials. Please try again.");
@@ -308,20 +365,59 @@ const Login = () => {
         <form onSubmit={handleSubmit}>
           {error && <ErrorMessage>{error}</ErrorMessage>}
           
-          <Input 
-            type="email" 
-            placeholder="Email" 
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required 
-          />
-          <Input 
-            type="password" 
-            placeholder="Password" 
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required 
-          />
+          {role === "student" ? (
+            <>
+              <Input 
+                type="text" 
+                placeholder="Student ID" 
+                value={studentId}
+                onChange={(e) => setStudentId(e.target.value)}
+                required 
+              />
+              <Input 
+                type="password" 
+                placeholder="Password" 
+                value={studentPassword}
+                onChange={(e) => setStudentPassword(e.target.value)}
+                required 
+              />
+            </>
+          ) : role === "parent" ? (
+            <>
+              <Input 
+                type="text" 
+                placeholder="Parent Name" 
+                value={parentName}
+                onChange={(e) => setParentName(e.target.value)}
+                required 
+              />
+              <Input 
+                type="text" 
+                placeholder="Student ID" 
+                value={studentId}
+                onChange={(e) => setStudentId(e.target.value)}
+                required 
+              />
+            </>
+          ) : (
+            <>
+              <Input 
+                type="email" 
+                placeholder="Email" 
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required 
+              />
+              <Input 
+                type="password" 
+                placeholder="Password" 
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required 
+              />
+            </>
+          )}
+          
           <SubmitButton type="submit" disabled={loading}>
             {loading ? "Signing In..." : "Sign In"}
           </SubmitButton>

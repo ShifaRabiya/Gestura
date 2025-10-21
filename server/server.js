@@ -21,6 +21,7 @@ app.use(cors({
 // Routes
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/institutions', require('./routes/institutionRoutes'));
+app.use('/api/users', require('./routes/userRoutes'));
 
 // Health check
 app.get('/api/health', (req, res) => {
