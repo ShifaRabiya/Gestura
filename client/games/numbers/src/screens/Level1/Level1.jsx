@@ -3,17 +3,20 @@ import Bogey from "../../components/train/Bogey";
 import { speak } from "../../utils/speak";
 import "./Level1.css";
 import Level1Music from "../../components/common/Level1Music";
+import GameOver from "../../components/common/GameOver";
 
 const numbers = [1, 2, 3, 4, 5];
 
-export default function Level1({ onComplete = () => { } }) {
+export default function Level1({ onComplete = () => { }, onExit = () => { } }) {
   const [index, setIndex] = useState(0);
   const [options, setOptions] = useState([]);
   const [selected, setSelected] = useState(null);
   const [locked, setLocked] = useState(false);
   const [hoverIndex, setHoverIndex] = useState(null);
   const [score, setScore] = useState(0);
+  const [lives, setLives] = useState(5);
   const [completed, setCompleted] = useState(false);
+  const [gameOver, setGameOver] = useState(false);
 
   const optionRefs = useRef([]);
   const dwellTimer = useRef(null);
@@ -24,7 +27,7 @@ export default function Level1({ onComplete = () => { } }) {
      GENERATE OPTIONS
      ========================= */
   useEffect(() => {
-    if (completed) return;
+    if (completed || gameOver) return;
 
     setSelected(null);
     setLocked(false);
@@ -40,13 +43,13 @@ export default function Level1({ onComplete = () => { } }) {
 
     setOptions(shuffled);
     speak(`Hover over the bogey with ${correct} apples`);
-  }, [target, completed]);
+  }, [target, completed, gameOver]);
 
   /* =========================
      HAND HOVER LOGIC
      ========================= */
   useEffect(() => {
-    if (completed) return;
+    if (completed || gameOver) return;
 
     const interval = setInterval(() => {
       if (!window.handCursor || locked) return;
@@ -83,13 +86,13 @@ export default function Level1({ onComplete = () => { } }) {
     }, 80);
 
     return () => clearInterval(interval);
-  }, [options, locked, hoverIndex, completed]);
+  }, [options, locked, hoverIndex, completed, gameOver]);
 
   /* =========================
      HANDLE SELECT (GAME ONLY)
      ========================= */
   const handleSelect = (count) => {
-    if (locked || completed) return;
+    if (locked || completed || gameOver) return;
 
     setLocked(true);
     setSelected(count);
@@ -106,6 +109,13 @@ export default function Level1({ onComplete = () => { } }) {
         setLocked(false);
       }, 1200);
     } else {
+      setLives((prev) => {
+        const newLives = prev - 1;
+        if (newLives <= 0) {
+          setGameOver(true);
+        }
+        return newLives;
+      });
       setScore((prev) => Math.max(0, prev - 5));
       speak("Try again");
 
@@ -127,6 +137,17 @@ export default function Level1({ onComplete = () => { } }) {
       console.log("Level complete. Waiting for user to proceed.");
     }
   }, [score, completed, onComplete]);
+
+  /* =========================
+     RESTART LEVEL
+     ========================= */
+  const handleRestart = () => {
+    setLives(5);
+    setScore(0);
+    setIndex(0);
+    setGameOver(false);
+    setCompleted(false);
+  };
 
   /* =========================
      COMPLETION SCREEN
@@ -179,16 +200,51 @@ export default function Level1({ onComplete = () => { } }) {
      ========================= */
   return (
     <div className="level1-scene">
+      <div className="background-decorations">
+        <div className="sun-container">
+          <svg className="smiling-sun" viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="40" fill="#FFD700" />
+            <circle cx="35" cy="45" r="5" fill="#333" />
+            <circle cx="65" cy="45" r="5" fill="#333" />
+            <path d="M35,65 q15,10 30,0" fill="none" stroke="#333" strokeWidth="3" strokeLinecap="round" />
+          </svg>
+        </div>
+        <div className="cloud-container cloud-1">
+          <svg className="cloud" viewBox="0 0 24 24"><path fill="#fff" d="M18.5,12c-0.3,0-0.6,0.1-0.9,0.1C17.2,8.6,14,6,10.5,6C6.4,6,3,9.4,3,13.5C3,13.7,3,13.8,3,14c-1.7,0.4-3,2-3,3.8c0,2.1,1.7,3.8,3.8,3.8h14.8c2.4,0,4.4-2,4.4-4.4S20.9,12.9,18.5,12z" /></svg>
+        </div>
+        <div className="cloud-container cloud-2">
+          <svg className="cloud" viewBox="0 0 24 24"><path fill="#fff" d="M18.5,12c-0.3,0-0.6,0.1-0.9,0.1C17.2,8.6,14,6,10.5,6C6.4,6,3,9.4,3,13.5C3,13.7,3,13.8,3,14c-1.7,0.4-3,2-3,3.8c0,2.1,1.7,3.8,3.8,3.8h14.8c2.4,0,4.4-2,4.4-4.4S20.9,12.9,18.5,12z" /></svg>
+        </div>
+        <div className="cloud-container cloud-3">
+          <svg className="cloud" viewBox="0 0 24 24"><path fill="#fff" d="M18.5,12c-0.3,0-0.6,0.1-0.9,0.1C17.2,8.6,14,6,10.5,6C6.4,6,3,9.4,3,13.5C3,13.7,3,13.8,3,14c-1.7,0.4-3,2-3,3.8c0,2.1,1.7,3.8,3.8,3.8h14.8c2.4,0,4.4-2,4.4-4.4S20.9,12.9,18.5,12z" /></svg>
+        </div>
+      </div>
       <Level1Music />
 
-      <div className="level1-number">{target}</div>
+      {gameOver && <GameOver onRestart={handleRestart} onExit={onExit} />}
+
+      <div className="game-hud">
+        <div className="level1-number-container">
+          <div className="level1-number">{target}</div>
+        </div>
+
+        <div className="hud-right">
+          <div className="lives-container bounce-in">
+            {[...Array(5)].map((_, i) => (
+              <span key={i} className={`heart-icon ${i >= lives ? "lost" : "active"}`}>
+                ❤️
+              </span>
+            ))}
+          </div>
+          <div className="score-board">
+            <span className="score-label">Score</span>
+            <span className="score-value">{score}</span>
+          </div>
+        </div>
+      </div>
 
       <div className="level1-instruction">
         Hover over the bogey with {target} apples
-      </div>
-
-      <div className="score-board">
-        Score: <strong>{score}</strong>
       </div>
 
       <div className="level1-options">

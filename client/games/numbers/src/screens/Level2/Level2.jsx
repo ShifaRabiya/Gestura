@@ -3,24 +3,27 @@ import Bogey from "../../components/train/Bogey";
 import { speak } from "../../utils/speak";
 import "./Level2.css";
 import Level2Music from "../../components/common/Level2Music";
+import GameOver from "../../components/common/GameOver";
 
 const numbers = [6, 7, 8, 9, 10];
 
-export default function Level2({ onComplete = () => { } }) {
+export default function Level2({ onComplete = () => { }, onExit = () => { } }) {
   const [index, setIndex] = useState(0);
   const [options, setOptions] = useState([]);
   const [selected, setSelected] = useState(null);
   const [locked, setLocked] = useState(false);
   const [hoverIndex, setHoverIndex] = useState(null);
   const [score, setScore] = useState(0);
+  const [lives, setLives] = useState(5);
+  const [completed, setCompleted] = useState(false);
+  const [gameOver, setGameOver] = useState(false);
+
   /* =========================
      DEBUG MOUNT
      ========================= */
   useEffect(() => {
     console.log("Level2 mounted!");
   }, []);
-
-  const [completed, setCompleted] = useState(false);
 
   const optionRefs = useRef([]);
   const dwellTimer = useRef(null);
@@ -31,7 +34,7 @@ export default function Level2({ onComplete = () => { } }) {
      GENERATE OPTIONS
      ========================= */
   useEffect(() => {
-    if (completed) return;
+    if (completed || gameOver) return;
 
     setSelected(null);
     setLocked(false);
@@ -50,13 +53,13 @@ export default function Level2({ onComplete = () => { } }) {
 
     setOptions(shuffled);
     speak(`Hover over the bogey with ${correct} apples`);
-  }, [target, completed]);
+  }, [target, completed, gameOver]);
 
   /* =========================
      HAND HOVER LOGIC
      ========================= */
   useEffect(() => {
-    if (completed) return;
+    if (completed || gameOver) return;
 
     const interval = setInterval(() => {
       if (!window.handCursor || locked) return;
@@ -93,13 +96,13 @@ export default function Level2({ onComplete = () => { } }) {
     }, 80);
 
     return () => clearInterval(interval);
-  }, [options, locked, hoverIndex, completed]);
+  }, [options, locked, hoverIndex, completed, gameOver]);
 
   /* =========================
      HANDLE SELECT (GAME ONLY)
      ========================= */
   const handleSelect = (count) => {
-    if (locked || completed) return;
+    if (locked || completed || gameOver) return;
 
     setLocked(true);
     setSelected(count);
@@ -116,6 +119,13 @@ export default function Level2({ onComplete = () => { } }) {
         setLocked(false);
       }, 1200);
     } else {
+      setLives((prev) => {
+        const newLives = prev - 1;
+        if (newLives <= 0) {
+          setGameOver(true);
+        }
+        return newLives;
+      });
       setScore((prev) => Math.max(0, prev - 5));
       speak("Try again");
 
@@ -136,6 +146,17 @@ export default function Level2({ onComplete = () => { } }) {
       speak("Level 2 completed! Awesome!");
     }
   }, [score, completed]);
+
+  /* =========================
+     RESTART LEVEL
+     ========================= */
+  const handleRestart = () => {
+    setLives(5);
+    setScore(0);
+    setIndex(0);
+    setGameOver(false);
+    setCompleted(false);
+  };
 
   /* =========================
      COMPLETION SCREEN
@@ -194,16 +215,62 @@ export default function Level2({ onComplete = () => { } }) {
      ========================= */
   return (
     <div className="level2-scene">
+      <div className="background-decorations">
+        <div className="sun-corner">
+          <svg viewBox="0 0 100 100">
+            <circle cx="20" cy="20" r="35" fill="#FFD97D" />
+            {[...Array(12)].map((_, i) => (
+              <line
+                key={i}
+                x1="20" y1="20"
+                x2={20 + 50 * Math.cos((i * 30 * Math.PI) / 180)}
+                y2={20 + 50 * Math.sin((i * 30 * Math.PI) / 180)}
+                stroke="#FFD97D" strokeWidth="6" strokeLinecap="round"
+              />
+            ))}
+          </svg>
+        </div>
+        <div className="flower-decor bottom-left">
+          <div className="flower">🌼</div>
+          <div className="flower small">🌼</div>
+        </div>
+        <div className="flower-decor bottom-right">
+          <div className="flower">🌼</div>
+          <div className="flower small">🌼</div>
+        </div>
+        <div className="flower-decor mid-right">
+          <div className="flower">🌼</div>
+        </div>
+      </div>
       <Level2Music />
 
-      <div className="level2-number">{target}</div>
+      {gameOver && <GameOver onRestart={handleRestart} onExit={onExit} />}
+
+      <div className="game-hud">
+        <div className="level2-number-wrapper">
+          <div className="level2-number-container">
+            <div className="level2-number">{target}</div>
+          </div>
+          <div className="number-label">Find</div>
+        </div>
+
+        <div className="hud-right">
+          <div className="lives-container bounce-in">
+            {[...Array(5)].map((_, i) => (
+              <span key={i} className={`heart-icon ${i >= lives ? "lost" : "active"}`}>
+                ❤️
+              </span>
+            ))}
+          </div>
+          <div className="score-board">
+            <span className="score-label">Score</span>
+            <span className="score-value">{score}</span>
+          </div>
+        </div>
+      </div>
 
       <div className="level2-instruction">
         Hover over the bogey with {target} apples
-      </div>
-
-      <div className="score-board">
-        Score: <strong>{score}</strong>
       </div>
 
       <div className="level2-options">
